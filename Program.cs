@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using PIMS.allsoft.Configurations;
 using PIMS.allsoft.Context;
 using PIMS.allsoft.Interfaces;
 using PIMS.allsoft.Services;
@@ -110,7 +111,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+    app.AddGlobalErrorHandeler();
 app.MapControllers();
 
 app.Run();
