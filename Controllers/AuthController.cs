@@ -1,6 +1,8 @@
 ﻿using PIMS.allsoft.Interfaces;
 using PIMS.allsoft.Models;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
+using PIMS.allsoft.Exceptions;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -10,16 +12,20 @@ namespace PIMS.allsoft.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly ILogger<AuthController> _logger;
         private readonly IAuthService _auth;
-        public AuthController(IAuthService auth)
+        public AuthController(IAuthService auth, ILogger<AuthController> logger)
         {
             _auth = auth;
+            _logger = logger;
+            _logger.LogDebug("Nlog is integrated to Auth Controller");
         }
         [HttpPost("login")]
-        public string Login([FromBody] LoginRequest obj)
+        public IActionResult Login([FromBody] LoginRequest obj)
         {
-            var token = _auth.Login(obj);
-            return token;
+              var token = _auth.Login(obj);
+            //  return Ok(token);           
+            return new JsonResult(token);
         }
 
         [HttpPost("assignRole")]

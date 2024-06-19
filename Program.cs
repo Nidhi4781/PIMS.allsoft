@@ -9,12 +9,21 @@ using PIMS.allsoft.Configurations;
 using PIMS.allsoft.Context;
 using PIMS.allsoft.Interfaces;
 using PIMS.allsoft.Services;
+using Serilog;
 using System.Text;
+try
+{
+    var configuration = new ConfigurationBuilder()
+                      .AddJsonFile("appsettings.json")
+                      .Build();
+    Log.Logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(configuration)
+       .CreateLogger();
 
-var builder = WebApplication.CreateBuilder(args);
+    Log.Logger.Information("Logging is working fine");
 
-// Add services to the container.
-// Add services to the container.
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseSerilog();
 builder.Services.AddDbContext<PIMSContext>
     (options => options.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
 builder.Services.AddTransient<IAuthService, AuthService>();
@@ -85,7 +94,7 @@ builder.Services.AddApiVersioning(options =>
 {
     
     options.AssumeDefaultVersionWhenUnspecified = true;
-     options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1,0);
+        options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
     options.ReportApiVersions = true;
     options.ApiVersionReader = ApiVersionReader.Combine(
        // new QueryStringApiVersionReader("api-version"),
@@ -99,6 +108,7 @@ builder.Services.AddVersionedApiExplorer(options =>
     options.GroupNameFormat = "'v'VVV";
     options.SubstituteApiVersionInUrl = true;
 });
+    builder.Services.AddMemoryCache();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -107,11 +117,22 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+    app.AddGlobalErrorHandeler();
 
 app.UseHttpsRedirection();
+    app.UseAuthentication();
 
 app.UseAuthorization();
     app.AddGlobalErrorHandeler();
 app.MapControllers();
 
 app.Run();
+}
+catch (Exception ex)
+{    
+    Log.Fatal(ex, "Application failed to start");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

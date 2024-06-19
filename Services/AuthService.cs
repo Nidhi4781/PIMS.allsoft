@@ -5,10 +5,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using PIMS.allsoft.Exceptions;
 
 namespace PIMS.allsoft.Services
 {
-    public class AuthService: IAuthService
+    public class AuthService : IAuthService
     {
         private readonly PIMSContext _context;
         private readonly IConfiguration _configuration;
@@ -19,8 +20,8 @@ namespace PIMS.allsoft.Services
             _configuration = configuration;
             _passwordHasher = passwordHasher;
 
-        }      
-        
+        }
+
         public Role AddRole(Role role)
         {
             var addedRole = _context.Roles.Add(role);
@@ -31,7 +32,7 @@ namespace PIMS.allsoft.Services
         public User AddUser(User user)
         {
             user.Password = _passwordHasher.Hash(user.Password);
-          //  user.Password= HashPassword(user.Password);
+            //  user.Password= HashPassword(user.Password);
             var addedUser = _context.Users.Add(user);
             _context.SaveChanges();
             return addedUser.Entity;
@@ -73,38 +74,43 @@ namespace PIMS.allsoft.Services
             if (loginRequest.Username != null && loginRequest.Password != null)
             {
                 var user = _context.Users.SingleOrDefault(s => s.Username == loginRequest.Username);
-                var pass = _passwordHasher.verify(user.Password, loginRequest.Password);
-                if (user != null && pass)
+                if (user != null)
                 {
-                
-                    var claims = new List<Claim> {
+                    var pass = _passwordHasher.verify(user.Password, loginRequest.Password);
+
+                    if (pass)
+                    {
+
+                        var claims = new List<Claim> {
                         new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
                         new Claim("UserID", user.UserID.ToString()),
                         new Claim("UserName", user.Username)
                     };
-                    var userRoles = _context.UserRoles.Where(u => u.UserId == user.UserID).ToList();
-                    var roleIds = userRoles.Select(s => s.RoleId).ToList();
-                    var roles = _context.Roles.Where(r => roleIds.Contains(r.RoleID)).ToList();
-                    foreach (var role in roles)
-                    {
-                        claims.Add(new Claim(ClaimTypes.Role, role.RoleName));
-                    }
-                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-                    var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-                    var token = new JwtSecurityToken(
-                        _configuration["Jwt:Issuer"],
-                        _configuration["Jwt:Audience"],
-                        claims,
-                        expires: DateTime.UtcNow.AddMinutes(10),
-                        signingCredentials: signIn);
+                        var userRoles = _context.UserRoles.Where(u => u.UserId == user.UserID).ToList();
+                        var roleIds = userRoles.Select(s => s.RoleId).ToList();
+                        var roles = _context.Roles.Where(r => roleIds.Contains(r.RoleID)).ToList();
+                        foreach (var role in roles)
+                        {
+                            claims.Add(new Claim(ClaimTypes.Role, role.RoleName));
+                        }
+                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                        var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                        var token = new JwtSecurityToken(
+                            _configuration["Jwt:Issuer"],
+                            _configuration["Jwt:Audience"],
+                            claims,
+                            expires: DateTime.UtcNow.AddMinutes(10),
+                            signingCredentials: signIn);
 
-                    var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
-                    return jwtToken;
+                        var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
+                        return jwtToken;
+                    }
+                    else
+                    {
+                        throw new BadRequestException("Password is not valid");
+                    }
                 }
-                else
-                {
-                    throw new Exception("user is not valid");
-                }
+                throw new BadRequestException("user is not valid");
             }
             else
             {

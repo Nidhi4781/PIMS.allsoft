@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Versioning;
+using PIMS.allsoft.Controllers;
 using PIMS.allsoft.Exceptions;
 using System.Net;
 using System.Text.Json;
@@ -13,18 +14,23 @@ namespace PIMS.allsoft.Configurations;
 public class GlobalExceptionHandelingMiddleware
 {
     private readonly RequestDelegate _next;
-
-    public GlobalExceptionHandelingMiddleware(RequestDelegate next)
-    { _next = next; }
+    private readonly ILogger<AuthController> _logger;
+    public GlobalExceptionHandelingMiddleware(RequestDelegate next, ILogger<AuthController> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
 
     public async Task Invoke(HttpContext context)
     {
         try
         {
+            _logger.LogInformation("GET request received",context);
             await _next(context);
         }
         catch (Exception e)
         {
+            _logger.LogError("Error",e);
             await HandleExceptionAsync(context, e);
         }
     }
@@ -69,7 +75,7 @@ public class GlobalExceptionHandelingMiddleware
                 StackTrace = e.StackTrace;
                 break;
         }
-     
+
         //if (exceptionType == typeof(BadRequestException))
         //{
         //    message = e.Message;
@@ -107,11 +113,12 @@ public class GlobalExceptionHandelingMiddleware
         //    StackTrace = e.StackTrace;
         //}
 
-        var exceptionResult = JsonSerializer.Serialize(new {
+        var exceptionResult = JsonSerializer.Serialize(new
+        {
             status = statusCode,
             message = message
-             });
-
+        });
+         
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
         return context.Response.WriteAsJsonAsync(exceptionResult);
