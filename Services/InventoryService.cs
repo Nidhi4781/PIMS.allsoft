@@ -17,7 +17,6 @@ namespace PIMS.allsoft.Services
 
         public async Task<Inventory> AdjustInventoryAsync(InventoryAdjustment adjustment)
         {
-            Int32 UserID = HttpContext.Session.GetInt32("ID");
             
             var inventory = new Inventory
             {
@@ -26,7 +25,7 @@ namespace PIMS.allsoft.Services
                 WarehouseLocation = "Default Location", 
                 Timestamp = DateTime.UtcNow,
                 Reason = adjustment.Reason,
-                UserResponsible = UserID
+                UserResponsible = adjustment.UserResponsible
             };
 
             _context.Inventories.Add(inventory);
@@ -56,7 +55,7 @@ namespace PIMS.allsoft.Services
             inventory.Quantity = newQuantity;
             inventory.Timestamp = DateTime.UtcNow;
             inventory.Reason = reason;
-            inventory.UserResponsible = UserID;
+            inventory.UserResponsible = userResponsible;
 
             _context.Inventories.Update(inventory);
             await _context.SaveChangesAsync();

@@ -102,7 +102,6 @@ namespace PIMS.allsoft.Services
                             claims,
                             expires: DateTime.UtcNow.AddMinutes(10),
                             signingCredentials: signIn);
-                        HttpContext.Session.SetInt32("UserID", user.UserID);
                         var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
                         return jwtToken;
                     }
