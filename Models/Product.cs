@@ -8,9 +8,15 @@
         public decimal Price { get; set; }
         public DateTime CreatedDate { get; set; }
         public string SKU { get; set; }
-
-        public ICollection<ProductCategory> ProductCategories { get; set; }
-        public ICollection<Inventory> Inventories { get; set; }
+        public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
+       // public ICollection<ProductCategory> ProductCategories { get; set; }
+        //public ICollection<Inventory> Inventories { get; set; }
+    }
+    public class PriceAdjustment
+    {
+        public List<int> ProductIds { get; set; }
+        public decimal AdjustmentAmount { get; set; }
+        public bool IsPercentage { get; set; }
     }
 
 }

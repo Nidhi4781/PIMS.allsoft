@@ -18,6 +18,7 @@ namespace PIMS.allsoft.Context
         public DbSet<UserRole> UserRoles { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
             modelBuilder.Entity<ProductCategory>()
             .HasKey(pc => new { pc.ProductID, pc.CategoryID });
 
@@ -31,13 +32,13 @@ namespace PIMS.allsoft.Context
                 .WithMany(c => c.ProductCategories)
                 .HasForeignKey(pc => pc.CategoryID);
 
-            modelBuilder.Entity<Product>()
-                .HasIndex(p => p.SKU)
-                .IsUnique();
+            //modelBuilder.Entity<Product>()
+            //    .HasIndex(p => p.SKU)
+            //    .IsUnique();
 
-            modelBuilder.Entity<Inventory>()
-                .Property(i => i.Timestamp)
-                .HasDefaultValueSql("GETDATE()");
+            //modelBuilder.Entity<Inventory>()
+            //    .Property(i => i.Timestamp)
+            //    .HasDefaultValueSql("GETDATE()");
             //// Configure UserRole relationships
             //modelBuilder.Entity<UserRole>()
             //    .HasKey(ur => ur.UserRoleID);

@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using PIMS.allsoft.Exceptions;
+using Microsoft.AspNetCore.Http;
 
 namespace PIMS.allsoft.Services
 {
@@ -14,12 +15,12 @@ namespace PIMS.allsoft.Services
         private readonly PIMSContext _context;
         private readonly IConfiguration _configuration;
         private readonly IPasswordHasher _passwordHasher;
+
         public AuthService(PIMSContext context, IConfiguration configuration, IPasswordHasher passwordHasher)
         {
             _context = context;
             _configuration = configuration;
             _passwordHasher = passwordHasher;
-
         }
 
         public Role AddRole(Role role)
@@ -101,7 +102,7 @@ namespace PIMS.allsoft.Services
                             claims,
                             expires: DateTime.UtcNow.AddMinutes(10),
                             signingCredentials: signIn);
-
+                        HttpContext.Session.SetInt32("UserID", user.UserID);
                         var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
                         return jwtToken;
                     }

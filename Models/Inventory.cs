@@ -8,8 +8,15 @@
         public string WarehouseLocation { get; set; }
         public DateTime Timestamp { get; set; }
         public string Reason { get; set; }
-        public string UserResponsible { get; set; }
+        public int UserResponsible { get; set; }
 
         public Product Product { get; set; }
+    }
+    public class InventoryAdjustment
+    {
+        public int ProductID { get; set; }
+        public int Quantity { get; set; }
+        public string Reason { get; set; }
+        public int UserResponsible { get; set; }
     }
 }
