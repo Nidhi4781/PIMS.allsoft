@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using PIMS.allsoft.Interfaces;
 using PIMS.allsoft.Models;
 using PIMS.allsoft.Services;
@@ -12,17 +13,28 @@ namespace PIMS.allsoft.Controllers.v1
     [Authorize(Roles ="Admin")]
     public class CategoryController : ControllerBase
     {
+        private readonly IMemoryCache _memoryCache;
+        private readonly ILogger<WeatherForecastController> _logger;
         private readonly ICategoryService _categoryService;
 
-        public CategoryController(ICategoryService categoryService)
+        public CategoryController(ICategoryService categoryService,ILogger<WeatherForecastController> logger, IMemoryCache memoryCache)
         {
             _categoryService = categoryService;
+            _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllCategories()
         {
-            var categories = await _categoryService.GetAllCategoriesAsync();
+           // var categories = await _categoryService.GetAllCategoriesAsync();
+            var categories = await _memoryCache.GetOrCreateAsync("Categories", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30); // Cache duration
+
+                var fetchedCategories = await _categoryService.GetAllCategoriesAsync();
+                return fetchedCategories;
+            });
             return Ok(categories);
         }
         [HttpPost]
